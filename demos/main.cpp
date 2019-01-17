@@ -91,19 +91,15 @@ namespace basics{
   // Label textbox
   
   static void draw_label(){
-    if(ImGui::Begin("label_test",nullptr)){
-        ImGui::Text("label_test_1");
-        ImGui::Text("label test_2");
-        ImGui::Text("label test_3");
-        ImGui::Text("label test_4");
-        
-        ImGui::End();
-      }
+    ImGui::BeginChild("##label",ImVec2(200,200));
+    ImGui::Text("Test");
+    ImGui::Text("Test 2");
+    ImGui::EndChild();
   }
   
   // Tooltip
   static void draw_tooltip(){
-    //ImGui::BeginChild("##tooltips",ImVec2(200,100),false,ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::BeginChild("##tooltips",ImVec2(200,100),false,ImGuiWindowFlags_AlwaysAutoResize);
     
     ImGui::Text("Hover over me");
     if (ImGui::IsItemHovered())
@@ -120,16 +116,121 @@ namespace basics{
         ImGui::EndTooltip();
       }
     
-     //ImGui::EndChild();
+    ImGui::EndChild();
   }
   
-  // Mouse
+  // Mouse position
+  static void print_mouse_current_position(){
+    ImVec2 mousePos = ImGui::GetMousePos();
+    ImVec2 screenPos = ImGui::GetCursorScreenPos();
+    ImVec2 cursorPos = ImGui::GetCursorPos();
+    ImVec2 ioPos = io->MousePos;
+    
+    // which one ?
+    
+    ImGui::BeginChild("##mousepos",ImVec2(400,400),false,ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::Text("mouse pos: %f : %f",mousePos.x,mousePos.y);
+    ImGui::Text("screenPos: %f : %f",screenPos.x,screenPos.y);
+    ImGui::Text("cursorPos: %f : %f",cursorPos.x,cursorPos.y);
+    ImGui::Text("ioPos: %f : %f",ioPos.x,ioPos.y);
+    ImGui::EndChild();
+    
+    // io->Mouse = mousePos => mouse cursor bilgisi
+    // screenPos = draw cursor bilgisi
+    // cursorPos = ne olduğu anlaşılamadı. TODO: ne bu
+  }
   
-  // Keyboard
+  // mouse down- which button
+  static void mouse_control(){
+    ImGui::Text("Mouse down:");
+    
+    int size = IM_ARRAYSIZE(io->MouseDown);
+    
+    ImGui::Text("Down size: %d ", size);
+    
+    for (int i = 0; i < size; i++){ 
+        if (io->MouseDownDuration[i] >= 0.0f)   {
+            ImGui::SameLine();
+            ImGui::Text("button_%d (%g secs)", i, io->MouseDownDuration[i]); 
+          }
+      }
+    
+    ImGui::Text("Mouse clicked");
+    for (int i = 0; i < size; ++i) {
+        if(ImGui::IsMouseClicked(i)){
+            ImGui::SameLine();
+            ImGui::Text("Mouse clicked: button_%d",i);
+          }
+      }
+    
+    // MOuse clicked position TODO
+    
+    // Mouse clicked time
+    
+    // Mouse clicked inside a window or outer ?
+    
+    
+    ImGui::Text("Mouse double clicked");
+    for(int i = 0; i < size; ++i){
+        if(ImGui::IsMouseDoubleClicked(i)){
+            ImGui::SameLine();
+            ImGui::Text("Mouse button double clicked: button_%d", i);
+          }
+      }
+    
+    ImGui::Text("Mouse released");
+    for(int i = 0; i < size; ++i){
+        if(ImGui::IsMouseReleased(i)){
+            ImGui::SameLine();
+            ImGui::Text("Released button: button_%d", i);
+          }
+      }
+    
+    ImGui::Text("Mouse Wheel : %g",io->MouseWheel);
+    
+    ImGui::Text("Mouse delta: [%g : %g ]", io->MouseDelta.x,io->MouseDelta.y);
+  }
   
-  // column, row
+  // Keyboard pressed button
+  static void print_keyboard_events(){
+    int size = IM_ARRAYSIZE(io->KeysDown);
+
+    ImGui::Text("Key down:");
+    for(auto i = 0; i < size; ++i){
+        if(ImGui::IsKeyDown(i)){
+            ImGui::SameLine();
+            ImGui::Text("%d",i);
+            if(io->KeysDownDuration[i] >= 0.0f){
+                ImGui::SameLine();
+                ImGui::Text(" %g secs",io->KeysDownDuration[i]);
+              }
+          }
+      }
+    
+    ImGui::Text("Key pressed");
+    for(auto i; i < size; ++i){
+        if(ImGui::IsKeyPressed(i)){
+            ImGui::SameLine();
+            ImGui::Text(" button_%d",i);
+          }
+      }
+    
+    ImGui::Text("Key released");
+    for(auto i = 0; i < size; ++i){
+        if(ImGui::IsKeyReleased(i)){
+            ImGui::SameLine();
+            ImGui::Text(" button%d",i);
+          }
+      }
+    
+    
+    ImGui::Text("Special keys");
+    if(io->KeyMap
+  }
   
-  // content
+  // BulletText
+  
+  // Column,Row
   
   // Combobox
   
@@ -145,9 +246,13 @@ namespace basics{
   
   // Progressbar
   
+  // io->keymap
+  
   // Image
   
   // Imagebutton
+  
+  // Collapsingheader
   
   // selectable
   
@@ -155,7 +260,9 @@ namespace basics{
     bool open = true;
     
     if(ImGui::Begin("##basics")){
-        draw_tooltip();
+        
+        print_keyboard_events();
+        
         ImGui::End();
       }
   }
@@ -176,8 +283,6 @@ namespace complex{
   // colordialog
   
   // radiobutton
-  
-  // bullet
   
   // TreeView
   
@@ -239,6 +344,8 @@ namespace operations{
   
   // allow app to capture mouse or imgui ? how ? io.WantCaptureMouse
   
+  // Get keyboard focus to pos SetKeyboardFocusHere PushAllowKeyboardFocus
+  
 }
 
 namespace window{
@@ -261,8 +368,6 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 
-
-
 int main(int argc, char *argv[])
 {
   glfwSetErrorCallback(glfw_error_callback);
@@ -277,6 +382,7 @@ int main(int argc, char *argv[])
   GLFWwindow* window = glfwCreateWindow(1440, 800, "Demos", NULL, NULL);
   if (window == NULL)
     return 1;
+  
   glfwMakeContextCurrent(window);
   
   bool err = glewInit() != GLEW_OK;
@@ -289,7 +395,7 @@ int main(int argc, char *argv[])
   
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  io = &ImGui::GetIO(); 
+  io = &ImGui::GetIO();
   
   ImGui::StyleColorsClassic();
   
